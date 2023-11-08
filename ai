@@ -1,0 +1,1949 @@
+DIJIkstra:
+
+
+import java.util.*;
+
+
+
+class Graph {
+
+  private int V;
+
+  private List<Map<Integer, Integer>> adj;
+
+
+
+  public Graph(int V) {
+
+    this.V = V;
+
+    adj = new ArrayList<>(V);
+
+    for (int i = 0; i < V; ++i)
+
+      adj.add(new HashMap<>());
+
+  }
+
+
+
+  public void addEdge(int src, int dest, int weight) {
+
+    adj.get(src).put(dest, weight);
+
+    adj.get(dest).put(src, weight); // For undirected graph
+
+  }
+
+
+
+  public void dijkstra(int src) {
+
+    int[] dist = new int[V];
+
+    Arrays.fill(dist, Integer.MAX_VALUE);
+
+    dist[src] = 0;
+
+
+
+    PriorityQueue<Integer> pq = new PriorityQueue<>(Comparator.comparingInt(dist::get));
+
+
+
+    pq.add(src);
+
+
+
+    while (!pq.isEmpty()) {
+
+      int u = pq.poll();
+
+
+
+      for (Map.Entry<Integer, Integer> entry : adj.get(u).entrySet()) {
+
+        int v = entry.getKey();
+
+        int weight = entry.getValue();
+
+
+
+        if (dist[u] + weight < dist[v]) {
+
+          dist[v] = dist[u] + weight;
+
+          pq.add(v);
+
+        }
+
+      }
+
+    }
+
+
+
+    // Print the shortest distances from the source
+
+    System.out.println("Shortest distances from the source node:");
+
+    for (int i = 0; i < V; ++i) {
+
+      System.out.println("Node " + i + ": " + dist[i]);
+
+    }
+
+  }
+
+}
+
+
+
+public class DijkstraExample {
+
+  public static void main(String[] args) {
+
+    int V = 5;
+
+    Graph graph = new Graph(V);
+
+    graph.addEdge(0, 1, 2);
+
+    graph.addEdge(0, 2, 4);
+
+    graph.addEdge(1, 2, 1);
+
+    graph.addEdge(1, 3, 7);
+
+    graph.addEdge(2, 3, 3);
+
+    graph.addEdge(2, 4, 5);
+
+    graph.addEdge(3, 4, 2);
+
+
+
+    int sourceNode = 0;
+
+    graph.dijkstra(sourceNode);
+
+  }
+
+}
+
+
+
+OUTPUT
+
+Shortest distances from the source node:
+
+Node 0: 0
+
+Node 1: 2
+
+Node 2: 3
+
+Node 3: 6
+
+Node 4: 8
+
+
+
+2.  A*
+package Asterist;
+
+
+
+import java.util.PriorityQueue;
+
+import java.util.Stack;
+
+
+
+public class AAsterisk {
+
+
+
+//Java Program to implement A* Search Algorithm
+
+
+
+   //Here we're creating a shortcut for (int, int) pair
+
+   public static class Pair {
+
+       int first;
+
+       int second;
+
+       public Pair(int first, int second){
+
+           this.first = first;
+
+           this.second = second;
+
+       }
+
+
+
+       @Override
+
+       public boolean equals(Object obj) {
+
+           return obj instanceof Pair && this.first == ((Pair)obj).first && this.second == ((Pair)obj).second;
+
+       }
+
+   }
+
+
+
+   // Creating a shortcut for tuple<int, int, int> type
+
+   public static class Details {
+
+       double value;
+
+       int i;
+
+       int j;
+
+
+
+       public Details(double value, int i, int j) {
+
+           this.value = value;
+
+           this.i = i;
+
+           this.j = j;
+
+       }
+
+   }
+
+
+
+   // a Cell (node) structure
+
+   public static class Cell {
+
+       public Pair parent;
+
+       // f = g + h, where h is heuristic
+
+       public double f, g, h;
+
+       Cell()
+
+       {
+
+           parent = new Pair(-1, -1);
+
+           f = -1;
+
+           g = -1;
+
+           h = -1;
+
+       }
+
+
+
+       public Cell(Pair parent, double f, double g, double h) {
+
+           this.parent = parent;
+
+           this.f = f;
+
+           this.g = g;
+
+           this.h = h;
+
+       }
+
+   }
+
+
+
+   // method to check if our cell (row, col) is valid
+
+   boolean isValid(int[][] grid, int rows, int cols,
+
+                   Pair point)
+
+   {
+
+       if (rows > 0 && cols > 0)
+
+           return (point.first >= 0) && (point.first < rows)
+
+                   && (point.second >= 0)
+
+                   && (point.second < cols);
+
+
+
+       return false;
+
+   }
+
+
+
+   //is the cell blocked?
+
+
+
+   boolean isUnBlocked(int[][] grid, int rows, int cols,
+
+                       Pair point)
+
+   {
+
+       return isValid(grid, rows, cols, point)
+
+               && grid[point.first][point.second] == 1;
+
+   }
+
+
+
+   //Method to check if destination cell has been already reached
+
+   boolean isDestination(Pair position, Pair dest)
+
+   {
+
+       return position == dest || position.equals(dest);
+
+   }
+
+
+
+   // Method to calculate heuristic function
+
+   double calculateHValue(Pair src, Pair dest)
+
+   {
+
+       return Math.sqrt(Math.pow((src.first - dest.first), 2.0) + Math.pow((src.second - dest.second), 2.0));
+
+   }
+
+
+
+   // Method for tracking the path from source to destination
+
+
+
+   void tracePath(
+
+           Cell[][] cellDetails,
+
+           int cols,
+
+           int rows,
+
+           Pair dest)
+
+   {   //A* Search algorithm path
+
+       System.out.println("The Path:  ");
+
+
+
+       Stack<Pair> path = new Stack<>();
+
+
+
+       int row = dest.first;
+
+       int col = dest.second;
+
+
+
+       Pair nextNode = cellDetails[row][col].parent;
+
+       do {
+
+           path.push(new Pair(row, col));
+
+           nextNode = cellDetails[row][col].parent;
+
+           row = nextNode.first;
+
+           col = nextNode.second;
+
+       } while (cellDetails[row][col].parent != nextNode); // until src
+
+
+
+
+
+       while (!path.empty()) {
+
+           Pair p = path.peek();
+
+           path.pop();
+
+           System.out.println("-> (" + p.first + "," + p.second + ") ");
+
+       }
+
+   }
+
+
+
+// A main method, A* Search algorithm to find the shortest path
+
+
+
+   void aStarSearch(int[][] grid,
+
+                    int rows,
+
+                    int cols,
+
+                    Pair src,
+
+                    Pair dest)
+
+   {
+
+
+
+       if (!isValid(grid, rows, cols, src)) {
+
+           System.out.println("Source is invalid...");
+
+           return;
+
+       }
+
+
+
+
+
+       if (!isValid(grid, rows, cols, dest)) {
+
+           System.out.println("Destination is invalid...");
+
+           return;
+
+       }
+
+
+
+
+
+       if (!isUnBlocked(grid, rows, cols, src)
+
+               || !isUnBlocked(grid, rows, cols, dest)) {
+
+           System.out.println("Source or destination is blocked...");
+
+           return;
+
+       }
+
+
+
+
+
+       if (isDestination(src, dest)) {
+
+           System.out.println("We're already (t)here...");
+
+           return;
+
+       }
+
+
+
+
+
+       boolean[][] closedList = new boolean[rows][cols];//our closed list
+
+
+
+       Cell[][] cellDetails = new Cell[rows][cols];
+
+
+
+       int i, j;
+
+       // Initialising of the starting cell
+
+       i = src.first;
+
+       j = src.second;
+
+       cellDetails[i][j] = new Cell();
+
+       cellDetails[i][j].f = 0.0;
+
+       cellDetails[i][j].g = 0.0;
+
+       cellDetails[i][j].h = 0.0;
+
+       cellDetails[i][j].parent = new Pair( i, j );
+
+
+
+
+
+  // Creating an open list
+
+
+
+
+
+       PriorityQueue<Details> openList = new PriorityQueue<>((o1, o2) -> (int) Math.round(o1.value - o2.value));
+
+
+
+       // Put the starting cell on the open list,   set f.startCell = 0
+
+
+
+       openList.add(new Details(0.0, i, j));
+
+
+
+       while (!openList.isEmpty()) {
+
+           Details p = openList.peek();
+
+           // Add to the closed list
+
+           i = p.i; // second element of tuple
+
+           j = p.j; // third element of tuple
+
+
+
+           // Remove from the open list
+
+           openList.poll();
+
+           closedList[i][j] = true;
+
+
+
+              // Generating all the 8 neighbors of the cell
+
+
+
+           for (int addX = -1; addX <= 1; addX++) {
+
+               for (int addY = -1; addY <= 1; addY++) {
+
+                   Pair neighbour = new Pair(i + addX, j + addY);
+
+                   if (isValid(grid, rows, cols, neighbour)) {
+
+                       if(cellDetails[neighbour.first] == null){ cellDetails[neighbour.first] = new Cell[cols]; }
+
+                       if (cellDetails[neighbour.first][neighbour.second] == null) {
+
+                           cellDetails[neighbour.first][neighbour.second] = new Cell();
+
+                       }
+
+
+
+                       if (isDestination(neighbour, dest)) {
+
+                           cellDetails[neighbour.first][neighbour.second].parent = new Pair ( i, j );
+
+                           System.out.println("The destination cell is found");
+
+                           tracePath(cellDetails, rows, cols, dest);
+
+                           return;
+
+                       }
+
+
+
+                       else if (!closedList[neighbour.first][neighbour.second]
+
+                               && isUnBlocked(grid, rows, cols, neighbour)) {
+
+                           double gNew, hNew, fNew;
+
+                           gNew = cellDetails[i][j].g + 1.0;
+
+                           hNew = calculateHValue(neighbour, dest);
+
+                           fNew = gNew + hNew;
+
+
+
+                           if (cellDetails[neighbour.first][neighbour.second].f == -1
+
+                                   || cellDetails[neighbour.first][neighbour.second].f > fNew) {
+
+
+
+                               openList.add(new Details(fNew, neighbour.first, neighbour.second));
+
+
+
+                               // Update the details of this
+
+                               // cell
+
+                               cellDetails[neighbour.first][neighbour.second].g = gNew;
+
+//heuristic function                               cellDetails[neighbour.first][neighbour.second].h = hNew;
+
+                               cellDetails[neighbour.first][neighbour.second].f = fNew;
+
+                               cellDetails[neighbour.first][neighbour.second].parent = new Pair( i, j );
+
+                           }
+
+                       }
+
+                   }
+
+               }
+
+           }
+
+       }
+
+
+
+       System.out.println("Failed to find the Destination Cell");
+
+   }
+
+
+
+   // test
+
+   public static void main(String[] args) {
+
+
+
+
+
+   //0: The cell is blocked
+
+  // 1: The cell is not blocked
+
+
+
+       int[][] grid = {
+
+               { 1, 1, 0, 0, 1, 0, 0, 0 },
+
+               { 1, 0, 0, 1, 1, 0, 1, 0 },
+
+               { 1, 1, 0, 1, 0, 0, 1, 0 },
+
+               { 1, 1, 0, 1, 1, 1, 1, 1 },
+
+               { 1, 1, 0, 0, 0, 1, 1, 1 },
+
+               { 0, 1, 1, 1, 0, 1, 1, 0 },
+
+               { 1, 1, 0, 1, 1, 1, 1, 0 },
+
+               { 0, 1, 1, 1, 1, 1, 1, 1 }
+
+
+
+       };
+
+
+
+
+
+       // Start is the left-most upper-most corner
+
+       Pair src = new Pair(0,0);
+
+               //(8, 0);
+
+
+
+       // Destination is the right-most bottom-most corner
+
+       Pair dest = new Pair(6, 6);
+
+
+
+       AAsterisk app = new AAsterisk();
+
+       app.aStarSearch(grid, grid.length , grid[0].length, src, dest);
+
+
+
+   }
+
+}
+
+
+
+output:
+
+The Path:  
+
+-> (0,0) 
+
+-> (1,0) 
+
+-> (2,1) 
+
+-> (3,1) 
+
+-> (4,1) 
+
+-> (5,2) 
+
+-> (5,3) 
+
+-> (6,4) 
+
+-> (6,5) 
+
+-> (6,6) 
+
+
+
+3.bfs and dfs
+import java.util.*;
+
+
+
+class Graph {
+
+  private int V;
+
+  private LinkedList<Integer> adj[];
+
+
+
+  Graph(int v) {
+
+    V = v;
+
+    adj = new LinkedList[v];
+
+    for (int i = 0; i < v; ++i)
+
+      adj[i] = new LinkedList();
+
+  }
+
+
+
+  void addEdge(int v, int w) {
+
+    adj[v].add(w);
+
+  }
+
+
+
+  LinkedList<Integer>[] getAdj() {
+
+    return adj;
+
+  }
+
+}
+
+
+
+public class Main {
+
+  private static boolean visited[];
+
+
+
+  Main(int v) {
+
+    visited = new boolean[v];
+
+    Arrays.fill(visited, false);
+
+  }
+
+
+
+  void dfs(Graph graph, int v) {
+
+    visited[v] = true;
+
+    System.out.print(v + " ");
+
+
+
+    LinkedList<Integer>[] adj = graph.getAdj();
+
+    for (Integer neighbor : adj[v]) {
+
+      if (!visited[neighbor])
+
+        dfs(graph, neighbor);
+
+    }
+
+  }
+
+
+
+  void bfs(Graph graph, int s) {
+
+    visited = new boolean[graph.getAdj().length];
+
+    LinkedList<Integer> queue = new LinkedList<>();
+
+
+
+    visited[s] = true;
+
+    queue.add(s);
+
+
+
+    while (queue.size() != 0) {
+
+      s = queue.poll();
+
+      System.out.print(s + " ");
+
+
+
+      LinkedList<Integer> adjList = graph.getAdj()[s];
+
+      for (Integer neighbor : adjList) {
+
+        if (!visited[neighbor]) {
+
+          visited[neighbor] = true;
+
+          queue.add(neighbor);
+
+        }
+
+      }
+
+    }
+
+  }
+
+
+
+  public static void main(String args[]) {
+
+    Graph graph = new Graph(7);
+
+    graph.addEdge(0, 1);
+
+    graph.addEdge(0, 2);
+
+    graph.addEdge(1, 3);
+
+    graph.addEdge(2, 4);
+
+    graph.addEdge(3, 5);
+
+    graph.addEdge(4, 5);
+
+    graph.addEdge(5, 6);
+
+
+
+    System.out.println("DFS Traversal:");
+
+    Main dfsBfs = new Main(7);
+
+    dfsBfs.dfs(graph, 0);
+
+
+
+    System.out.println("\nBFS Traversal:");
+
+    dfsBfs.bfs(graph, 0);
+
+  }
+
+}
+
+
+
+output:
+
+DFS Traversal:
+
+0 1 3 5 4 2 6 
+
+BFS Traversal:
+
+0 1 2 3 4 5 6 
+
+
+
+4. CSP_graph coloring
+import java.util.Arrays;
+
+
+
+class GraphColoring {
+
+  private int V; // Number of vertices in the graph
+
+  private int[] colors; // Stores the assigned colors to vertices
+
+  private int[][] graph; // Graph representation as an adjacency matrix
+
+
+
+  // Constructor
+
+  public GraphColoring(int[][] graph, int V) {
+
+    this.graph = graph;
+
+    this.V = V;
+
+    colors = new int[V];
+
+    Arrays.fill(colors, -1); // Initialize colors with -1 (no color assigned)
+
+  }
+
+
+
+  // Check if it's safe to assign the color c to vertex v
+
+  private boolean isSafe(int v, int c) {
+
+    for (int i = 0; i < V; i++) {
+
+      if (graph[v][i] == 1 && colors[i] == c) {
+
+        return false; // If adjacent vertex is already colored with the same color
+
+      }
+
+    }
+
+    return true;
+
+  }
+
+
+
+  // Recursive function to solve graph coloring using backtracking
+
+  private boolean graphColoringUtil(int v) {
+
+    if (v == V) {
+
+      return true; // All vertices are colored
+
+    }
+
+
+
+    // Try different colors for vertex v
+
+    for (int c = 0; c < V; c++) {
+
+      if (isSafe(v, c)) {
+
+        colors[v] = c; // Assign color c to vertex v
+
+
+
+        // Recur to assign colors to rest of the vertices
+
+        if (graphColoringUtil(v + 1)) {
+
+          return true; // If a valid coloring is found
+
+        }
+
+
+
+        // If assigning color c doesn't lead to a solution, backtrack
+
+        colors[v] = -1;
+
+      }
+
+    }
+
+
+
+    return false; // No valid coloring exists
+
+  }
+
+
+
+  // Wrapper function to solve graph coloring problem
+
+  public boolean graphColoring() {
+
+    return graphColoringUtil(0);
+
+  }
+
+
+
+  // Print the colors assigned to vertices
+
+  public void printSolution() {
+
+    System.out.println("Vertex\tColor");
+
+    for (int i = 0; i < V; i++) {
+
+      System.out.println(i + "\t\t" + colors[i]);
+
+    }
+
+  }
+
+}
+
+
+
+public class Main {
+
+  public static void main(String[] args) {
+
+    int[][] graph = {
+
+      {0, 1, 1, 1},
+
+      {1, 0, 1, 0},
+
+      {1, 1, 0, 1},
+
+      {1, 0, 1, 0}
+
+    };
+
+    int V = graph.length;
+
+    GraphColoring gc = new GraphColoring(graph, V);
+
+    if (gc.graphColoring()) {
+
+      System.out.println("Graph can be colored with the following colors:");
+
+      gc.printSolution();
+
+    } else {
+
+      System.out.println("Graph cannot be colored with the given number of colors.");
+
+    }
+
+  }
+
+}
+
+
+
+output;
+
+Graph can be colored with the following colors:
+
+Vertex Color
+
+0    0
+
+1    1
+
+2    2
+
+3    1
+
+
+
+5. alpha_beta 
+public class AlphaBetaPruning {
+
+
+
+  public static int alphaBeta(int depth, int nodeIndex, int alpha, int beta, boolean maximizingPlayer, int[] values) {
+
+    if (depth == 0) {
+
+      return values[nodeIndex];
+
+    }
+
+
+
+    if (maximizingPlayer) {
+
+      int maxEval = Integer.MIN_VALUE;
+
+      for (int i = 0; i < 2; ++i) {
+
+        int eval = alphaBeta(depth - 1, nodeIndex * 2 + i, alpha, beta, false, values);
+
+        maxEval = Math.max(maxEval, eval);
+
+        alpha = Math.max(alpha, eval);
+
+        if (beta <= alpha) {
+
+          break;
+
+        }
+
+      }
+
+      return maxEval;
+
+    } else {
+
+      int minEval = Integer.MAX_VALUE;
+
+      for (int i = 0; i < 2; ++i) {
+
+        int eval = alphaBeta(depth - 1, nodeIndex * 2 + i, alpha, beta, true, values);
+
+        minEval = Math.min(minEval, eval);
+
+        beta = Math.min(beta, eval);
+
+        if (beta <= alpha) {
+
+          break;
+
+        }
+
+      }
+
+      return minEval;
+
+    }
+
+  }
+
+
+
+  public static void main(String[] args) {
+
+    int[] values = {3, 5, 9, 2, 8, 10, 6};
+
+    int result = alphaBeta(3, 0, Integer.MIN_VALUE, Integer.MAX_VALUE, true, values);
+
+    System.out.println("Optimal value: " + result);
+
+  }
+
+}
+
+output
+
+Optimal value: 5
+
+
+
+
+
+6Tic-Tac-Toe 
+import java.util.Scanner;
+
+
+
+public class TicTacToe {
+
+
+
+    private static char[][] board = {{' ', ' ', ' '}, {' ', ' ', ' '}, {' ', ' ', ' '}};
+
+    private static char currentPlayer = 'X';
+
+
+
+    public static void main(String[] args) {
+
+        Scanner scanner = new Scanner(System.in);
+
+        boolean gameOver = false;
+
+
+
+        while (!gameOver) {
+
+            printBoard();
+
+            System.out.println("Player " + currentPlayer + ", enter your move (row and column): ");
+
+            int row = scanner.nextInt();
+
+            int col = scanner.nextInt();
+
+
+
+            if (isValidMove(row, col)) {
+
+                board[row][col] = currentPlayer;
+
+                if (checkWin()) {
+
+                    printBoard();
+
+                    System.out.println("Player " + currentPlayer + " wins!");
+
+                    gameOver = true;
+
+                } else if (isBoardFull()) {
+
+                    printBoard();
+
+                    System.out.println("It's a draw!");
+
+                    gameOver = true;
+
+                } else {
+
+                    currentPlayer = (currentPlayer == 'X') ? 'O' : 'X';
+
+                }
+
+            } else {
+
+                System.out.println("Invalid move. Try again.");
+
+            }
+
+        }
+
+
+
+        scanner.close();
+
+    }
+
+
+
+    private static void printBoard() {
+
+        System.out.println("-------------");
+
+        for (int i = 0; i < 3; i++) {
+
+            System.out.print("| ");
+
+            for (int j = 0; j < 3; j++) {
+
+                System.out.print(board[i][j] + " | ");
+
+            }
+
+            System.out.println();
+
+            System.out.println("-------------");
+
+        }
+
+    }
+
+
+
+    private static boolean isValidMove(int row, int col) {
+
+        if (row >= 0 && row < 3 && col >= 0 && col < 3 && board[row][col] == ' ') {
+
+            return true;
+
+        }
+
+        return false;
+
+    }
+
+
+
+    private static boolean checkWin() {
+
+        // Check rows, columns, and diagonals
+
+        for (int i = 0; i < 3; i++) {
+
+            if ((board[i][0] == currentPlayer && board[i][1] == currentPlayer && board[i][2] == currentPlayer) ||
+
+                (board[0][i] == currentPlayer && board[1][i] == currentPlayer && board[2][i] == currentPlayer)) {
+
+                return true;
+
+            }
+
+        }
+
+        if ((board[0][0] == currentPlayer && board[1][1] == currentPlayer && board[2][2] == currentPlayer) ||
+
+            (board[0][2] == currentPlayer && board[1][1] == currentPlayer && board[2][0] == currentPlayer)) {
+
+            return true;
+
+        }
+
+        return false;
+
+    }
+
+
+
+    private static boolean isBoardFull() {
+
+        for (int i = 0; i < 3; i++) {
+
+            for (int j = 0; j < 3; j++) {
+
+                if (board[i][j] == ' ') {
+
+                    return false;
+
+                }
+
+            }
+
+        }
+
+        return true;
+
+    }
+
+}
+
+output:
+
+
+
+-------------
+
+|  |  |  |
+
+-------------
+
+|  |  |  |
+
+-------------
+
+|  |  |  |
+
+-------------
+
+Player X, enter your move (row and column):
+
+1 1
+
+-------------
+
+|  |  |  |
+
+-------------
+
+|  | X |  |
+
+-------------
+
+|  |  |  |
+
+-------------
+
+Player O, enter your move (row and column):
+
+1 3
+
+Invalid move. Try again.
+
+-------------
+
+|  |  |  |
+
+-------------
+
+|  | X |  |
+
+-------------
+
+|  |  |  |
+
+-------------
+
+Player O, enter your move (row and column):
+
+0 2
+
+-------------
+
+|  |  | O |
+
+-------------
+
+|  | X |  |
+
+-------------
+
+|  |  |  |
+
+-------------
+
+Player X, enter your move (row and column):
+
+0 0
+
+-------------
+
+| X |  | O |
+
+-------------
+
+|  | X |  |
+
+-------------
+
+|  |  |  |
+
+-------------
+
+Player O, enter your move (row and column):
+
+2 1
+
+-------------
+
+| X |  | O |
+
+-------------
+
+|  | X |  |
+
+-------------
+
+|  | O |  |
+
+-------------
+
+Player X, enter your move (row and column):
+
+2 2
+
+-------------
+
+| X |  | O |
+
+-------------
+
+|  | X |  |
+
+-------------
+
+|  | O | X |
+
+-------------
+
+Player X wins!
+
+
+
+7.Hill climbing:
+import java.util.function.Function;
+
+
+
+public class HillClimbing {
+
+
+
+  public static double hillClimbing(Function<Double, Double> function, double initialGuess, double stepSize) {
+
+    double currentX = initialGuess;
+
+    double currentValue = function.apply(currentX);
+
+
+
+    while (true) {
+
+      double nextX = currentX + stepSize;
+
+      double nextValue = function.apply(nextX);
+
+
+
+      if (nextValue < currentValue) {
+
+        currentX = nextX;
+
+        currentValue = nextValue;
+
+      } else {
+
+        break; // If the next value is not smaller, stop climbing
+
+      }
+
+    }
+
+
+
+    return currentX;
+
+  }
+
+
+
+  public static void main(String[] args) {
+
+    // Example usage: finding the minimum of a quadratic function f(x) = x^2 - 4x + 4
+
+    Function<Double, Double> quadraticFunction = x -> x * x - 4 * x + 4;
+
+    double initialGuess = 0.0; // Initial guess for the solution
+
+    double stepSize = 0.1; // Step size for climbing
+
+
+
+    double result = hillClimbing(quadraticFunction, initialGuess, stepSize);
+
+    System.out.println("Optimal solution: x = " + result);
+
+    System.out.println("Minimum value: f(x) = " + quadraticFunction.apply(result));
+
+  }
+
+}
+
+
+
+output:
+
+Optimal solution: x = 2.0
+
+Minimum value: f(x) = 0.0
+
+
+
+8 Puzzle Problem
+import java.util.*;
+
+
+
+class PuzzleNode implements Comparable<PuzzleNode> {
+
+  int[][] puzzle;
+
+  int cost;
+
+  int heuristic;
+
+  int moves;
+
+  PuzzleNode parent;
+
+
+
+  PuzzleNode(int[][] puzzle, int cost, int heuristic, int moves, PuzzleNode parent) {
+
+    this.puzzle = puzzle;
+
+    this.cost = cost;
+
+    this.heuristic = heuristic;
+
+    this.moves = moves;
+
+    this.parent = parent;
+
+  }
+
+
+
+  @Override
+
+  public int compareTo(PuzzleNode other) {
+
+    return this.cost + this.heuristic - (other.cost + other.heuristic);
+
+  }
+
+}
+
+
+
+public class EightPuzzle {
+
+  static final int[][] GOAL_STATE = {{1, 2, 3}, {4, 5, 6}, {7, 8, 0}};
+
+
+
+  public static void main(String[] args) {
+
+    int[][] initialState = {{2, 8, 3}, {1, 6, 4}, {7, 0, 5}};
+
+    solvePuzzle(initialState);
+
+  }
+
+
+
+  static void solvePuzzle(int[][] initialState) {
+
+    PriorityQueue<PuzzleNode> openSet = new PriorityQueue<>();
+
+    Set<String> closedSet = new HashSet<>();
+
+
+
+    PuzzleNode startNode = new PuzzleNode(initialState, 0, calculateHeuristic(initialState), 0, null);
+
+    openSet.add(startNode);
+
+
+
+    while (!openSet.isEmpty()) {
+
+      PuzzleNode currentNode = openSet.poll();
+
+      if (Arrays.deepEquals(currentNode.puzzle, GOAL_STATE)) {
+
+        printSolution(currentNode);
+
+        return;
+
+      }
+
+
+
+      closedSet.add(Arrays.deepToString(currentNode.puzzle));
+
+
+
+      int emptyRow = 0;
+
+      int emptyCol = 0;
+
+
+
+      // Find the empty space (0) in the current puzzle state
+
+      outerloop:
+
+      for (int i = 0; i < 3; i++) {
+
+        for (int j = 0; j < 3; j++) {
+
+          if (currentNode.puzzle[i][j] == 0) {
+
+            emptyRow = i;
+
+            emptyCol = j;
+
+            break outerloop;
+
+          }
+
+        }
+
+      }
+
+
+
+      // Generate possible moves (up, down, left, right)
+
+      int[] dr = {-1, 1, 0, 0};
+
+      int[] dc = {0, 0, -1, 1};
+
+
+
+      for (int i = 0; i < 4; i++) {
+
+        int newRow = emptyRow + dr[i];
+
+        int newCol = emptyCol + dc[i];
+
+
+
+        if (newRow >= 0 && newRow < 3 && newCol >= 0 && newCol < 3) {
+
+          int[][] newPuzzle = new int[3][3];
+
+          for (int j = 0; j < 3; j++) {
+
+            System.arraycopy(currentNode.puzzle[j], 0, newPuzzle[j], 0, 3);
+
+          }
+
+          // Swap empty space with the adjacent tile
+
+          newPuzzle[emptyRow][emptyCol] = newPuzzle[newRow][newCol];
+
+          newPuzzle[newRow][newCol] = 0;
+
+
+
+          // Check if the new state is not in the closed set
+
+          if (!closedSet.contains(Arrays.deepToString(newPuzzle))) {
+
+            PuzzleNode newNode = new PuzzleNode(newPuzzle,
+
+                currentNode.moves + 1,
+
+                calculateHeuristic(newPuzzle),
+
+                currentNode.moves + 1 + calculateHeuristic(newPuzzle),
+
+                currentNode);
+
+            openSet.add(newNode);
+
+          }
+
+        }
+
+      }
+
+    }
+
+
+
+    System.out.println("No solution found!");
+
+  }
+
+
+
+  static int calculateHeuristic(int[][] puzzle) {
+
+    int misplacedTiles = 0;
+
+    for (int i = 0; i < 3; i++) {
+
+      for (int j = 0; j < 3; j++) {
+
+        if (puzzle[i][j] != 0 && puzzle[i][j] != GOAL_STATE[i][j]) {
+
+          misplacedTiles++;
+
+        }
+
+      }
+
+    }
+
+    return misplacedTiles;
+
+  }
+
+
+
+  static void printSolution(PuzzleNode node) {
+
+    Stack<PuzzleNode> solution = new Stack<>();
+
+    while (node != null) {
+
+      solution.push(node);
+
+      node = node.parent;
+
+    }
+
+
+
+    while (!solution.isEmpty()) {
+
+      PuzzleNode step = solution.pop();
+
+      printPuzzle(step.puzzle);
+
+      System.out.println("Move: " + step.moves);
+
+      System.out.println();
+
+    }
+
+  }
+
+
+
+  static void printPuzzle(int[][] puzzle) {
+
+    for (int i = 0; i < 3; i++) {
+
+      for (int j = 0; j < 3; j++) {
+
+        System.out.print(puzzle[i][j] + " ");
+
+      }
+
+      System.out.println();
+
+    }
+
+  }
+
+}
+
+
+
+input:
+
+{{2, 8, 3}, {1, 6, 4}, {7, 0, 5}}
+
+output:
+
+{{1, 2, 3}, {4, 5, 6}, {7, 8, 0}}
+
+
+
+10:
+
+
+
+
+
+
+
+TSP
+import java.util.ArrayList;
+
+import java.util.Arrays;
+
+import java.util.List;
+
+
+
+public class TravelingSalesmanProblem {
+
+
+
+  static int[][] distances = {
+
+      {0, 10, 15, 20},
+
+      {10, 0, 35, 25},
+
+      {15, 35, 0, 30},
+
+      {20, 25, 30, 0}
+
+  };
+
+  static boolean[] visited;
+
+  static int minDistance = Integer.MAX_VALUE;
+
+  static List<Integer> optimalRoute = new ArrayList<>();
+
+
+
+  public static void main(String[] args) {
+
+    int numberOfCities = distances.length;
+
+    visited = new boolean[numberOfCities];
+
+    Arrays.fill(visited, false);
+
+
+
+    List<Integer> currentRoute = new ArrayList<>();
+
+    currentRoute.add(0); // Starting city is assumed to be 0
+
+    visited[0] = true;
+
+
+
+    tsp(0, numberOfCities, 1, 0, currentRoute);
+
+
+
+    System.out.println("Optimal Route: " + optimalRoute);
+
+    System.out.println("Minimum Distance: " + minDistance);
+
+  }
+
+
+
+  static void tsp(int currentCity, int numberOfCities, int count, int distanceSoFar, List<Integer> currentRoute) {
+
+    if (count == numberOfCities) {
+
+      if (distances[currentCity][0] != 0 && distanceSoFar + distances[currentCity][0] < minDistance) {
+
+        minDistance = distanceSoFar + distances[currentCity][0];
+
+        optimalRoute = new ArrayList<>(currentRoute);
+
+        optimalRoute.add(0); // Return to the starting city
+
+      }
+
+      return;
+
+    }
+
+
+
+    for (int i = 0; i < numberOfCities; i++) {
+
+      if (!visited[i] && distances[currentCity][i] != 0 && distanceSoFar + distances[currentCity][i] < minDistance) {
+
+        visited[i] = true;
+
+        currentRoute.add(i);
+
+        tsp(i, numberOfCities, count + 1, distanceSoFar + distances[currentCity][i], currentRoute);
+
+        visited[i] = false;
+
+        currentRoute.remove(currentRoute.size() - 1);
+
+      }
+
+    }
+
+  }
+
+}
+
+
+
+output
+
+input:
+
+0 10 15 20
+
+10 0 35 25
+
+15 35  0 30
+
+20 25 30  0
+
+
+
+output:
+
+Optimal Route: [0, 1, 3, 2, 0]
+
+Minimum Distance: 80
+
+
+
+
+
